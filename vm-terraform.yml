@@ -18,7 +18,6 @@ permissions:
   contents: read
 
 env:
-  WORKING_DIRECTORY: VM-terraform
   TF_VAR_admin_username: ${{ secrets.TF_VAR_ADMIN_USERNAME }}
   TF_VAR_admin_password: ${{ secrets.TF_VAR_ADMIN_PASSWORD }}
 
@@ -27,9 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+        working-directory: ./VM-terraform
+
     steps:
-      - name: Check out repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Login to Azure
@@ -37,26 +37,16 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_LAB_SECRET }}
 
-      - name: Configure Terraform Azure credentials
-        shell: bash
-        env:
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_LAB_SECRET }}
-        run: |
-          echo "ARM_CLIENT_ID=$(jq -r .clientId <<< "$AZURE_CREDENTIALS")" >> "$GITHUB_ENV"
-          echo "ARM_CLIENT_SECRET=$(jq -r .clientSecret <<< "$AZURE_CREDENTIALS")" >> "$GITHUB_ENV"
-          echo "ARM_TENANT_ID=$(jq -r .tenantId <<< "$AZURE_CREDENTIALS")" >> "$GITHUB_ENV"
-          echo "ARM_SUBSCRIPTION_ID=$(jq -r .subscriptionId <<< "$AZURE_CREDENTIALS")" >> "$GITHUB_ENV"
-          echo "ARM_USE_AZUREAD=true" >> "$GITHUB_ENV"
-
-      - name: Set up Terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.9.5
 
-      - name: Initialize and validate Terraform
-        run: |
-          terraform init -input=false
-          terraform validate -no-color
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate -no-color
 
       - name: Terraform plan
         run: terraform plan -input=false -no-color -out=tfplan
