@@ -29,19 +29,19 @@ variable "storage_account_name_rg_name" {
 
 variable "existing_vnet_resource_group_name" {
   type        = string
-  default     = "test-vm"
+  default     = "rg-vnet-spoke"
   description = "Name of the resource group containing the existing vnet (deployed via bicep)."
 }
 
 variable "existing_vnet_name" {
   type        = string
-  default     = "vnet-test-vm"
+  default     = "vnet-spoke"
   description = "Name of the existing vnet (deployed via bicep) to attach the new subnet and VM to."
 }
 
 variable "subnet_address_prefix" {
   type        = string
-  default     = "10.0.2.0/24"
+  default     = "10.0.3.0/24"
   description = "Address prefix for the new subnet created for this VM (must not overlap existing subnets, e.g. 10.0.1.0/24)."
 }
 
