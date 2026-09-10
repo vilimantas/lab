@@ -17,10 +17,6 @@ on:
 permissions:
   contents: read
 
-env:
-  TF_VAR_admin_username: ${{ secrets.TF_VAR_ADMIN_USERNAME }}
-  TF_VAR_admin_password: ${{ secrets.TF_VAR_ADMIN_PASSWORD }}
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
