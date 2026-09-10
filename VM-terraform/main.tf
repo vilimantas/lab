@@ -1,0 +1,152 @@
+# Existing resource group and vnet deployed by the bicep VM template (VM/main.bicep)
+data "azurerm_resource_group" "rg" {
+  name = var.existing_vnet_resource_group_name
+}
+
+data "azurerm_virtual_network" "my_terraform_network" {
+  name                = var.existing_vnet_name
+  resource_group_name = data.azurerm_resource_group.rg.name
+}
+
+# Existing Key Vault deployed by bicep, holding the VM admin credentials
+data "azurerm_key_vault" "kv" {
+  name                = var.existing_key_vault_name
+  resource_group_name = var.existing_key_vault_resource_group_name
+}
+
+data "azurerm_key_vault_secret" "admin_username" {
+  name         = var.admin_username_secret_name
+  key_vault_id = data.azurerm_key_vault.kv.id
+}
+
+data "azurerm_key_vault_secret" "admin_password" {
+  name         = var.admin_password_secret_name
+  key_vault_id = data.azurerm_key_vault.kv.id
+}
+
+# Create a new subnet inside the existing vnet
+resource "azurerm_subnet" "my_terraform_subnet" {
+  name                 = "${random_pet.prefix.id}-subnet"
+  resource_group_name  = data.azurerm_resource_group.rg.name
+  virtual_network_name = data.azurerm_virtual_network.my_terraform_network.name
+  address_prefixes     = [var.subnet_address_prefix]
+}
+
+# Create Network Security Group and rules
+resource "azurerm_network_security_group" "my_terraform_nsg" {
+  name                = "${random_pet.prefix.id}-nsg"
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "RDP"
+    priority                   = 1000
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  security_rule {
+    name                       = "web"
+    priority                   = 1001
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+# Create network interface
+resource "azurerm_network_interface" "my_terraform_nic" {
+  name                = "${random_pet.prefix.id}-nic"
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                          = "my_nic_configuration"
+    subnet_id                     = azurerm_subnet.my_terraform_subnet.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+# Connect the security group to the network interface
+resource "azurerm_network_interface_security_group_association" "example" {
+  network_interface_id      = azurerm_network_interface.my_terraform_nic.id
+  network_security_group_id = azurerm_network_security_group.my_terraform_nsg.id
+}
+
+# Create storage account for boot diagnostics
+resource "azurerm_storage_account" "my_storage_account" {
+  name                     = "diag${random_id.random_id.hex}"
+  location                 = data.azurerm_resource_group.rg.location
+  resource_group_name      = data.azurerm_resource_group.rg.name
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+
+# Create virtual machine
+resource "azurerm_windows_virtual_machine" "main" {
+  name                  = "${var.prefix}-vm"
+  admin_username        = data.azurerm_key_vault_secret.admin_username.value
+  admin_password        = data.azurerm_key_vault_secret.admin_password.value
+  location              = data.azurerm_resource_group.rg.location
+  resource_group_name   = data.azurerm_resource_group.rg.name
+  network_interface_ids = [azurerm_network_interface.my_terraform_nic.id]
+  size                  = "Standard_D2alds_v6"
+
+  os_disk {
+    name                 = "myOsDisk"
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
+  }
+
+  source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2022-datacenter-azure-edition"
+    version   = "latest"
+  }
+
+
+  boot_diagnostics {
+    storage_account_uri = azurerm_storage_account.my_storage_account.primary_blob_endpoint
+  }
+}
+
+# Install IIS web server to the virtual machine
+# resource "azurerm_virtual_machine_extension" "web_server_install" {
+#   name                       = "${random_pet.prefix.id}-wsi"
+#   virtual_machine_id         = azurerm_windows_virtual_machine.main.id
+#   publisher                  = "Microsoft.Compute"
+#   type                       = "CustomScriptExtension"
+#   type_handler_version       = "1.8"
+#   auto_upgrade_minor_version = true
+
+#   settings = <<SETTINGS
+#     {
+#       "commandToExecute": "powershell -ExecutionPolicy Unrestricted Install-WindowsFeature -Name Web-Server -IncludeAllSubFeature -IncludeManagementTools"
+#     }
+#   SETTINGS
+# }
+
+# Generate random text for a unique storage account name
+resource "random_id" "random_id" {
+  keepers = {
+    # Generate a new ID only when a new resource group is defined
+    resource_group = data.azurerm_resource_group.rg.name
+  }
+
+  byte_length = 8
+}
+
+resource "random_pet" "prefix" {
+  prefix = var.prefix
+  length = 1
+}
