@@ -1,24 +1,24 @@
-# Existing resource group and vnet deployed by the bicep VM template (VM/main.bicep)
+# Existing resource group containing the new deployment
 data "azurerm_resource_group" "rg" {
-  name = var.existing_vnet_resource_group_name
+  name = var.resource_group_name
 }
 
 data "azurerm_virtual_network" "my_terraform_network" {
   name                = var.existing_vnet_name
-  resource_group_name = data.azurerm_resource_group.rg.name
+  resource_group_name = var.existing_vnet_resource_group_name
 }
 
 # Create a new subnet inside the existing vnet
 resource "azurerm_subnet" "my_terraform_subnet" {
-  name                 = "${random_pet.prefix.id}-subnet"
-  resource_group_name  = data.azurerm_resource_group.rg.name
+  name                 = "subnet-spoke-3"
+  resource_group_name  = var.existing_vnet_resource_group_name
   virtual_network_name = data.azurerm_virtual_network.my_terraform_network.name
   address_prefixes     = [var.subnet_address_prefix]
 }
 
 # Create Network Security Group and rules
 resource "azurerm_network_security_group" "my_terraform_nsg" {
-  name                = "${random_pet.prefix.id}-nsg"
+  name                = "nsg-spoke-3"
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
 
@@ -48,7 +48,7 @@ resource "azurerm_network_security_group" "my_terraform_nsg" {
 
 # Create network interface
 resource "azurerm_network_interface" "my_terraform_nic" {
-  name                = "${random_pet.prefix.id}-nic"
+  name                = "nic-VM-git"
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
 
@@ -66,13 +66,13 @@ resource "azurerm_network_interface_security_group_association" "example" {
 }
 
 # Create storage account for boot diagnostics
-resource "azurerm_storage_account" "my_storage_account" {
-  name                     = "diag${random_id.random_id.hex}"
-  location                 = data.azurerm_resource_group.rg.location
-  resource_group_name      = data.azurerm_resource_group.rg.name
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
+# resource "azurerm_storage_account" "my_storage_account" {
+#   name                     = "diag${random_id.random_id.hex}"
+#   location                 = data.azurerm_resource_group.rg.location
+#   resource_group_name      = data.azurerm_resource_group.rg.name
+#   account_tier             = "Standard"
+#   account_replication_type = "LRS"
+# }
 
 
 # Create virtual machine

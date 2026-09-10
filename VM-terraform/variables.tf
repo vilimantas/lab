@@ -9,23 +9,29 @@ variable "subscription_id" {
   description = "Azure subscription id to deploy into (pinned explicitly to avoid CLI auto-detection issues)."
 }
 
+variable "resource_group_name" {
+  type        = string
+  default     = "rg-win-vm-git"
+  description = "Name of the resource group to deploy the VM into."
+}
+
 variable "prefix" {
   type        = string
   default     = "win-vm-iis"
   description = "Prefix of the resource name"
 }
 
-variable "storage_account_name" {
-  type        = string
-  default     = "sastatevlab2026"
-  description = "Name of the storage account for the backend."
-}
+# variable "storage_account_name" {
+#   type        = string
+#   default     = "sastatevlab2026"
+#   description = "Name of the storage account for the backend."
+# }
 
-variable "storage_account_name_rg_name" {
-  type        = string
-  default     = "tfstate-rg"
-  description = "Name of the resource group for the storage account backend."
-}
+# variable "storage_account_name_rg_name" {
+#   type        = string
+#   default     = "tfstate-rg"
+#   description = "Name of the resource group for the storage account backend."
+# }
 
 variable "existing_vnet_resource_group_name" {
   type        = string
