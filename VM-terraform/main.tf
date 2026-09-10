@@ -8,22 +8,6 @@ data "azurerm_virtual_network" "my_terraform_network" {
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
-# Existing Key Vault deployed by bicep, holding the VM admin credentials
-data "azurerm_key_vault" "kv" {
-  name                = var.existing_key_vault_name
-  resource_group_name = var.existing_key_vault_resource_group_name
-}
-
-data "azurerm_key_vault_secret" "admin_username" {
-  name         = var.admin_username_secret_name
-  key_vault_id = data.azurerm_key_vault.kv.id
-}
-
-data "azurerm_key_vault_secret" "admin_password" {
-  name         = var.admin_password_secret_name
-  key_vault_id = data.azurerm_key_vault.kv.id
-}
-
 # Create a new subnet inside the existing vnet
 resource "azurerm_subnet" "my_terraform_subnet" {
   name                 = "${random_pet.prefix.id}-subnet"
@@ -94,8 +78,8 @@ resource "azurerm_storage_account" "my_storage_account" {
 # Create virtual machine
 resource "azurerm_windows_virtual_machine" "main" {
   name                  = "${var.prefix}-vm"
-  admin_username        = data.azurerm_key_vault_secret.admin_username.value
-  admin_password        = data.azurerm_key_vault_secret.admin_password.value
+  admin_username        = var.admin_username
+  admin_password        = var.admin_password
   location              = data.azurerm_resource_group.rg.location
   resource_group_name   = data.azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.my_terraform_nic.id]

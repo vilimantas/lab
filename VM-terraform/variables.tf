@@ -45,26 +45,15 @@ variable "subnet_address_prefix" {
   description = "Address prefix for the new subnet created for this VM (must not overlap existing subnets, e.g. 10.0.1.0/24)."
 }
 
-variable "existing_key_vault_name" {
+variable "admin_username" {
   type        = string
-  default     = "kv-shark-secrets"
-  description = "Name of the existing Key Vault (deployed via bicep) that stores the VM admin credentials."
+  default     = "azureadmin"
+  description = "VM admin username for test deployments."
 }
 
-variable "existing_key_vault_resource_group_name" {
+variable "admin_password" {
   type        = string
-  default     = "kv-shark-secrets-rg"
-  description = "Resource group of the existing Key Vault."
-}
-
-variable "admin_username_secret_name" {
-  type        = string
-  default     = "vm-admin-username"
-  description = "Key Vault secret name for the VM admin username."
-}
-
-variable "admin_password_secret_name" {
-  type        = string
-  default     = "vm-admin-password"
-  description = "Key Vault secret name for the VM admin password."
+  default     = "P@ssw0rd1234!"
+  sensitive   = true
+  description = "VM admin password for test deployments."
 }
