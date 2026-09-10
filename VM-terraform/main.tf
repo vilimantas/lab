@@ -1,6 +1,7 @@
 # Existing resource group containing the new deployment
-data "azurerm_resource_group" "rg" {
+resource "azurerm_resource_group" "rg" {
   name = var.resource_group_name
+  location = var.resource_group_location
 }
 
 data "azurerm_virtual_network" "my_terraform_network" {
