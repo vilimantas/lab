@@ -20,8 +20,8 @@ resource "azurerm_subnet" "my_terraform_subnet" {
 # Create Network Security Group and rules
 resource "azurerm_network_security_group" "my_terraform_nsg" {
   name                = "nsg-spoke-3"
-  location            = var.resource_group_location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
 
   security_rule {
     name                       = "RDP"
@@ -50,8 +50,8 @@ resource "azurerm_network_security_group" "my_terraform_nsg" {
 # Create network interface
 resource "azurerm_network_interface" "my_terraform_nic" {
   name                = "nic-VM-git"
-  location            = var.resource_group_location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
 
   ip_configuration {
     name                          = "my_nic_configuration"
@@ -81,8 +81,8 @@ resource "azurerm_windows_virtual_machine" "main" {
   name                  = "${var.prefix}-vm"
   admin_username        = var.admin_username
   admin_password        = var.admin_password
-  location              = var.resource_group_location
-  resource_group_name   = var.resource_group_name
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.my_terraform_nic.id]
   size                  = "Standard_D2alds_v6"
 
