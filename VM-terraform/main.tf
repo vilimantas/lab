@@ -1,6 +1,6 @@
-# Existing resource group containing the new deployment
+# Create the resource group for the VM deployment
 resource "azurerm_resource_group" "rg" {
-  name = var.resource_group_name
+  name     = var.resource_group_name
   location = var.resource_group_location
 }
 
@@ -20,8 +20,8 @@ resource "azurerm_subnet" "my_terraform_subnet" {
 # Create Network Security Group and rules
 resource "azurerm_network_security_group" "my_terraform_nsg" {
   name                = "nsg-spoke-3"
-  location            = data.azurerm_resource_group.rg.location
-  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = var.resource_group_location
+  resource_group_name = var.resource_group_name
 
   security_rule {
     name                       = "RDP"
@@ -50,8 +50,8 @@ resource "azurerm_network_security_group" "my_terraform_nsg" {
 # Create network interface
 resource "azurerm_network_interface" "my_terraform_nic" {
   name                = "nic-VM-git"
-  location            = data.azurerm_resource_group.rg.location
-  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = var.resource_group_location
+  resource_group_name = var.resource_group_name
 
   ip_configuration {
     name                          = "my_nic_configuration"
@@ -69,8 +69,8 @@ resource "azurerm_network_interface_security_group_association" "example" {
 # Create storage account for boot diagnostics
 # resource "azurerm_storage_account" "my_storage_account" {
 #   name                     = "diag${random_id.random_id.hex}"
-#   location                 = data.azurerm_resource_group.rg.location
-#   resource_group_name      = data.azurerm_resource_group.rg.name
+#   location                 = var.resource_group_location
+#   resource_group_name      = var.resource_group_name
 #   account_tier             = "Standard"
 #   account_replication_type = "LRS"
 # }
@@ -81,8 +81,8 @@ resource "azurerm_windows_virtual_machine" "main" {
   name                  = "${var.prefix}-vm"
   admin_username        = var.admin_username
   admin_password        = var.admin_password
-  location              = data.azurerm_resource_group.rg.location
-  resource_group_name   = data.azurerm_resource_group.rg.name
+  location              = var.resource_group_location
+  resource_group_name   = var.resource_group_name
   network_interface_ids = [azurerm_network_interface.my_terraform_nic.id]
   size                  = "Standard_D2alds_v6"
 
@@ -122,8 +122,7 @@ resource "azurerm_windows_virtual_machine" "main" {
 # Generate random text for a unique storage account name
 resource "random_id" "random_id" {
   keepers = {
-    # Generate a new ID only when a new resource group is defined
-    resource_group = data.azurerm_resource_group.rg.name
+    resource_group = var.resource_group_name
   }
 
   byte_length = 8
