@@ -1,7 +1,7 @@
-variable "subscription_id" {
-	type        = string
-	description = "Azure subscription ID used by the provider."
-}
+# variable "subscription_id" {
+# 	type        = string
+# 	description = "Azure subscription ID used by the provider."
+# }
 
 variable "resource_group_name" {
 	type        = string
@@ -60,12 +60,15 @@ variable "user_object_id" {
 	type        = string
 	description = "Microsoft Entra user object ID assigned AKS RBAC Cluster Admin."
 	sensitive   = true
+	default = "8cf7c4ed-b729-4b1c-b979-a6ce52e53d5b"
+
 }
 
 variable "deploy_monitoring" {
+	default     = false
 	type        = bool
 	description = "Enable Container Insights and managed Prometheus metrics on the cluster."
-	default     = false
+
 }
 
 variable "log_analytics_workspace_id" {
