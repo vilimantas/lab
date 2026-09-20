@@ -7,14 +7,14 @@ resource "azurerm_resource_group" "aks" {
 }
 
 resource "azurerm_kubernetes_cluster" "aks" {
-  name                          = var.aks_cluster_name
-  location                      = azurerm_resource_group.aks.location
-  resource_group_name           = azurerm_resource_group.aks.name
-  dns_prefix                    = var.aks_cluster_name
-  sku_tier                      = "Standard"
+  name                              = var.aks_cluster_name
+  location                          = azurerm_resource_group.aks.location
+  resource_group_name               = azurerm_resource_group.aks.name
+  dns_prefix                        = var.aks_cluster_name
+  sku_tier                          = "Standard"
   role_based_access_control_enabled = true
-  local_account_disabled             = true
-  tags                               = var.tags
+  local_account_disabled            = true
+  tags                              = var.tags
 
   default_node_pool {
     name            = var.system_node_pool_name
@@ -58,6 +58,19 @@ resource "azurerm_kubernetes_cluster" "aks" {
       labels_allowed      = "*"
     }
   }
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "user" {
+  name                  = var.user_node_pool_name
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+  mode                  = "User"
+  node_count            = var.user_node_count
+  vm_size               = var.user_node_vm_size
+  os_disk_size_gb       = var.user_node_os_disk_size_gb
+  os_disk_type          = var.user_node_os_disk_type
+  os_sku                = "AzureLinux"
+  zones                 = ["1", "2", "3"]
+  tags                  = var.tags
 }
 
 resource "azurerm_role_assignment" "cluster_admin" {
