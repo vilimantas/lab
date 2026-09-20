@@ -1,0 +1,56 @@
+name: Deploy Podinfo to AKS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "aks-terraform/kubernetes/**"
+      - ".github/workflows/podinfo.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: podinfo-aks
+  cancel-in-progress: false
+
+env:
+  AKS_RESOURCE_GROUP: rg-aks-cluster
+  AKS_CLUSTER_NAME: aks-cluster
+  MANIFEST_PATH: aks-terraform/kubernetes/manifest.yaml
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_LAB_SECRET }}
+
+      - name: Apply Kubernetes manifest
+        run: |
+          az aks command invoke \
+            --resource-group "$AKS_RESOURCE_GROUP" \
+            --name "$AKS_CLUSTER_NAME" \
+            --command "kubectl apply -f manifest.yaml" \
+            --file "$MANIFEST_PATH"
+
+      - name: Wait for Podinfo rollout
+        run: |
+          az aks command invoke \
+            --resource-group "$AKS_RESOURCE_GROUP" \
+            --name "$AKS_CLUSTER_NAME" \
+            --command "kubectl rollout status deployment/podinfo --namespace podinfo --timeout=180s"
+
+      - name: Show deployment status
+        run: |
+          az aks command invoke \
+            --resource-group "$AKS_RESOURCE_GROUP" \
+            --name "$AKS_CLUSTER_NAME" \
+            --command "kubectl get pods,service --namespace podinfo --output wide"

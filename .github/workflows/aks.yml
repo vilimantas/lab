@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "aks-terraform/**"
-      - ".github/workflows/aks-terraform.yml"
+      - "aks-terraform/*.tf"
+      - ".github/workflows/aks.yml"
   workflow_dispatch:
     inputs:
       apply:
