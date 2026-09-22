@@ -1,4 +1,4 @@
-name: Deploy Podinfo to AKS
+name: Deploy SVK Sounds to AKS
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: podinfo-aks
+  group: svksounds-aks
   cancel-in-progress: false
 
 env:
@@ -41,16 +41,16 @@ jobs:
             --command "kubectl apply -f manifest.yaml" \
             --file "$MANIFEST_PATH"
 
-      - name: Wait for Podinfo rollout
+      - name: Wait for SVK Sounds rollout
         run: |
           az aks command invoke \
             --resource-group "$AKS_RESOURCE_GROUP" \
             --name "$AKS_CLUSTER_NAME" \
-            --command "kubectl rollout status deployment/podinfo --namespace podinfo --timeout=180s"
+            --command "kubectl rollout status deployment/svksounds --namespace svksounds --timeout=180s"
 
       - name: Show deployment status
         run: |
           az aks command invoke \
             --resource-group "$AKS_RESOURCE_GROUP" \
             --name "$AKS_CLUSTER_NAME" \
-            --command "kubectl get pods,service --namespace podinfo --output wide"
+            --command "kubectl get pods,service --namespace svksounds --output wide"
