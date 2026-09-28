@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "svksounds.fullname" . }}
+  labels:
+    app.kubernetes.io/name: svksounds
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app.kubernetes.io/name: svksounds
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP

@@ -10,7 +10,10 @@ spec:
   source:
     repoURL: https://github.com/vilimantas/lab.git
     targetRevision: main
-    path: aks-terraform/kubernetes
+    path: charts/svksounds
+    helm:
+      valueFiles:
+        - values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: svksounds
